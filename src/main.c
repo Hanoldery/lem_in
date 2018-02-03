@@ -6,7 +6,7 @@
 /*   By: pgerbaud <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/01/31 17:59:02 by pgerbaud          #+#    #+#             */
-/*   Updated: 2018/02/01 14:58:09 by pgerbaud         ###   ########.fr       */
+/*   Updated: 2018/02/03 20:11:27 by pgerbaud         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@ void	free_all(t_room **map)
 		free(map[i]);
 	}
 	free(map);
-	*map = NULL;
 }
 
 int		main(void)

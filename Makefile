@@ -6,7 +6,7 @@
 #    By: Pierre <Pierre@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2016/11/07 14:30:42 by pgerbaud          #+#    #+#              #
-#    Updated: 2018/02/01 16:40:35 by pgerbaud         ###   ########.fr        #
+#    Updated: 2018/02/03 19:21:40 by pgerbaud         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,13 +16,14 @@ SRC = 	main \
 		algo \
 		struct_utils \
 		parser \
+		parser_utils \
 		output
 OBJ=$(foreach lem, $(SRC), src/$(lem).o)
 
 LIB = src/libft
 INC = ./includes ./$(LIB)/includes
 
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -g
 CFLAGS += $(foreach path, $(INC), -I$(path))
 
 # ----------- COLORS -----------
