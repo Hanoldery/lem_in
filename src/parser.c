@@ -6,7 +6,7 @@
 /*   By: pgerbaud <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/01/31 17:59:09 by pgerbaud          #+#    #+#             */
-/*   Updated: 2018/02/03 20:13:15 by pgerbaud         ###   ########.fr       */
+/*   Updated: 2018/02/06 17:28:54 by pgerbaud         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,16 +22,12 @@ int			pattern(char **lines, int *i, t_room **map)
 	while (lines[*i][j])
 	{
 		if (ft_isnumber(lines[*i]))
-		{
-			printf("\tPATTERN number lines_%s_ i%d\n", lines[*i], *i);
 			return (1);
-		}
 		if (lines[*i][j] == ' ' && i != 0)
 		{
 			line = ft_strsplit(lines[*i], ' ');
-			printf("\tPATTERN room lines_%s_ i%d \n", lines[*i], *i);
 			if (line[0] && line[1] && line[2] && ft_strisnumber(line[1])
-					&& ft_strisnumber(line[2]))
+					&& ft_strisnumber(line[2]) && !line[3])
 			{
 				free(line);
 				return (2);
@@ -41,32 +37,24 @@ int			pattern(char **lines, int *i, t_room **map)
 		}
 		else if (lines[*i][j] == '-' && i != 0)
 		{
-			printf("\tPATTERN link lines_%s_ i%d\n", lines[*i], *i);
 			line = ft_strsplit(lines[*i], '-');
-			if (line[0] && line[1] && struct_exist(line[0], map)
-					&& struct_exist(line[1], map))
-			{
-				printf("\tPATTERN link lines_%s_ i%d\n", lines[*i], *i);
+			if (line[0] && line[1] && struct_exist(line[0], map) >= 0
+					&& struct_exist(line[1], map) >= 0 && !line[2]
+					&& ft_strcmp(line[0], line[1]) != 0)
 				return (free_ret(NULL, NULL, line, 3));
-			}
-			printf("\tPATTERN link lines_%s_ i%d\n", lines[*i], *i);
 			return (free_ret(NULL, NULL, line, 0));
 		}
 		while (lines[*i][j] == '#' && j == 0)
 		{
 			if (lines[*i][j + 1] == '#')
-				if (!(ft_strcmp(lines[*i], "##start") || ft_strcmp(lines[*i], "##end")))
-				{
-					printf("\tPATTERN false command lines_%s_ i%d\n", lines[*i], *i);
+				if (!(ft_strcmp(lines[*i], "##start")
+							|| ft_strcmp(lines[*i], "##end")) || *i == 0)
 					return (0);
-				}
-			printf("\tPATTERN command/comment lines_%s_ i%d\n", lines[*i], *i);
 			*i = *i + 1;
 			j--;
 		}
 		j++;
 	}
-	printf("\tPATTERN broke lines_%s_ i%d\n\n", lines[*i], *i);
 	return (0);
 }
 
@@ -82,14 +70,22 @@ void		get_rooms(t_room **map, char **lines, int i, int ants)
 	while (map[j])
 		j++;
 	line = ft_strsplit(lines[i], ' ');
-	if (struct_exist(line[0], map))
+	if (struct_exist(line[0], map) >= 0)
 		exit (1); //May have to free
 	map[j] = new_struct(lines);
 	map[j]->ant = 0;
 	if (ft_strcmp(lines[i - 1], "##start") == 0)
 	{
+		if (struct_start_end_exist(map, -1))
+			exit (1);
 		map[j]->start_end = -1;
 		map[j]->ant = ants;
+	}
+	if (ft_strcmp(lines[i - 1], "##end") == 0)
+	{
+		if (struct_start_end_exist(map, 1))
+			exit (1);
+		map[j]->start_end = 1;
 	}
 	map[j]->name = ft_strdup(line[0]);
 	map[j]->x = ft_atoi(line[1]);
@@ -98,11 +94,31 @@ void		get_rooms(t_room **map, char **lines, int i, int ants)
 		ft_strdel(&line[del++]);
 }
 
-void		get_links(t_room **map, char **lines, int i)
+int		get_links(t_room **map, char **lines, int i)
 {
-	(void)map;
-	(void)lines;
-	(void)i;
+	char	**line;
+	int		repeat;
+	int		index;
+	int		index_2;
+
+	index_2 = 0;
+	repeat = 0;
+	index = 0;
+	line = ft_strsplit(lines[i], '-');
+	while (repeat < 2)
+	{
+		index = struct_exist(line[repeat], map);
+		if (!map[index]->links)
+			map[index]->links = (int *)malloc(sizeof(int) *
+				estimate_links_number(lines, map[index]->name));
+		while (index_2 < map[index]->link_nbr)
+			if (map[index]->links[index_2++] == struct_exist(line[!repeat], map))
+				return 0;
+		map[index]->links[map[index]->link_nbr] = struct_exist(line[!repeat], map);
+		map[index]->link_nbr++;
+		repeat++;
+	}
+	return (1);
 }
 
 t_room		**map_init(t_room **map, char **lines, char *entry)
@@ -119,22 +135,16 @@ t_room		**map_init(t_room **map, char **lines, char *entry)
 	map = (t_room **)malloc(sizeof(t_room *) * (room_number + 1));
 	while (room_number >= 0)
 		map[--room_number + 1] = NULL;
-	printf("MAP_INIT 0 ---------------- %p %d\n", map[4], room_number);
-	//while (lines[i])
-	//{
-		start_end = check_start_end(lines, i);
-		if (pattern(lines, &i, map) != 1)
-			exit (1);
-		ants = ft_atoimax(lines[i++]);
-		while (lines[i] && pattern(lines, &i, map) == 2)
-			get_rooms(map, lines, i++, ants);
-		while (lines[i] && pattern(lines, &i, map) == 3)
-			get_links(map, lines, i++);
-		//if (lines[i] && pattern(lines, &i, map) == 0)
-		//	break ;
-	//	if (lines[i])
-	//		i++;
-	//}
+	start_end = check_start_end(lines, i);
+	if (pattern(lines, &i, map) != 1 || ft_atoimax(lines[i]) < 1 ||
+			ft_atoimax(lines[i]) > 2147483647)
+		exit (1);
+	ants = ft_atoimax(lines[i++]);
+	while (lines[i] && pattern(lines, &i, map) == 2)
+		get_rooms(map, lines, i++, ants);
+	while (lines[i] && pattern(lines, &i, map) == 3)
+		if (!get_links(map, lines, i++))
+			break;
 	return (map);
 }
 
@@ -157,5 +167,6 @@ t_room		**get_map(void)
 		free(lines[del++]);
 	free(lines);
 	display_struct(map);
+	printf("\nFINAL :\n %d\n", resolvable(map, 0, 0, 0));
 	return (map);
 }
