@@ -6,7 +6,7 @@
 /*   By: pgerbaud <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/01/31 17:59:09 by pgerbaud          #+#    #+#             */
-/*   Updated: 2018/02/06 17:28:54 by pgerbaud         ###   ########.fr       */
+/*   Updated: 2018/02/07 18:56:15 by pgerbaud         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,8 +112,13 @@ int		get_links(t_room **map, char **lines, int i)
 			map[index]->links = (int *)malloc(sizeof(int) *
 				estimate_links_number(lines, map[index]->name));
 		while (index_2 < map[index]->link_nbr)
+		{
 			if (map[index]->links[index_2++] == struct_exist(line[!repeat], map))
-				return 0;
+			{
+				printf("LINK ERROR %s links_nbr%d %d %d\n", map[index]->name, map[index]->link_nbr, map[index]->links[index_2 - 1], struct_exist(line[!repeat], map));
+				return (0);
+			}
+		}
 		map[index]->links[map[index]->link_nbr] = struct_exist(line[!repeat], map);
 		map[index]->link_nbr++;
 		repeat++;
@@ -143,8 +148,12 @@ t_room		**map_init(t_room **map, char **lines, char *entry)
 	while (lines[i] && pattern(lines, &i, map) == 2)
 		get_rooms(map, lines, i++, ants);
 	while (lines[i] && pattern(lines, &i, map) == 3)
+	{
 		if (!get_links(map, lines, i++))
+		{
 			break;
+		}
+	}
 	return (map);
 }
 
@@ -166,7 +175,7 @@ t_room		**get_map(void)
 	while (lines[del])
 		free(lines[del++]);
 	free(lines);
-	display_struct(map);
-	printf("\nFINAL :\n %d\n", resolvable(map, 0, 0, 0));
+	//display_struct(map);
+	printf("\nFINAL :\n %d\n", launch_resolvable(map));
 	return (map);
 }

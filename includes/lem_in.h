@@ -6,7 +6,7 @@
 /*   By: pgerbaud <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/01/31 17:56:49 by pgerbaud          #+#    #+#             */
-/*   Updated: 2018/02/06 17:28:52 by pgerbaud         ###   ########.fr       */
+/*   Updated: 2018/02/07 15:16:28 by pgerbaud         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,15 @@ typedef struct	s_room {
 	int				y;
 	int				start_end;
 	int				ant;
+	int				crossed;
+	int				weight;
 }				t_room;
+
+typedef struct	s_algo {
+	int			room_id;
+	int			weight;
+	int			steps;
+}				t_algo;
 
 t_room			**get_map(void);
 t_room			**map_init(t_room **map, char **lines, char *entry);
@@ -53,6 +61,7 @@ int				free_ret(t_room **map, char **lines, char **line, int ret);
 /*
  * ALGO
  */
-int				resolvable(t_room **map, int room_id, int weight, int step);
+int				resolvable(t_room **map, t_algo *algo);
+int				launch_resolvable(t_room **map);
 
 #endif
