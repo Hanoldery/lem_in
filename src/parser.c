@@ -6,76 +6,25 @@
 /*   By: pgerbaud <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/01/31 17:59:09 by pgerbaud          #+#    #+#             */
-/*   Updated: 2018/02/14 10:32:50 by pgerbaud         ###   ########.fr       */
+/*   Updated: 2018/02/14 18:17:27 by pgerbaud         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "lem_in.h"
 
-int			pattern(char **lines, int *i, t_room **map)
-{
-	int		j;
-	char	**line;
-
-	line = NULL;
-	j = 0;
-	if (lines[*i][j] == 'L')
-		return (-1);
-	while (lines[*i] && lines[*i][j])
-	{
-		if (ft_isnumber(lines[*i]))
-			return (1);
-		if (lines[*i][j] == ' ' && i != 0)
-		{
-			line = ft_strsplit(lines[*i], ' ');
-			if (line[0] && line[1] && line[2] && ft_strisnumber(line[1])
-					&& ft_strisnumber(line[2]) && !line[3])
-			{
-				ft_strtabdel(&line);
-				return (2);
-			}
-			ft_strtabdel(&line);
-			return (-1);
-		}
-		else if (lines[*i][j] == '-' && i != 0)
-		{
-			line = ft_strsplit(lines[*i], '-');
-			printf("PATTERN %s\n", lines[*i]);
-			if (line[0] && line[1] && struct_exist(line[0], map) >= 0
-					&& struct_exist(line[1], map) >= 0 && !line[2]
-					&& ft_strcmp(line[0], line[1]) != 0)
-				return (free_ret(NULL, NULL, line, 3));
-			return (free_ret(NULL, NULL, line, 0));
-		}
-		while (lines[*i] && lines[*i][j] == '#' && j == 0)
-		{
-			if (lines[*i][j + 1] == '#')
-				if (!(ft_strcmp(lines[*i], "##start")
-							|| ft_strcmp(lines[*i], "##end")) || *i == 0)
-					return (0);
-			*i = *i + 1;
-			j--;
-		}
-		j++;
-	}
-	return (0);
-}
-
 void		get_rooms(t_room **map, char **lines, int i, int ants)
 {
-	int		del;
 	char	**line;
 	int		j;
 	int		before;
 
 	j = 0;
 	line = NULL;
-	del = 0;
 	before = 1;
 	while (map[j])
 		j++;
 	line = ft_strsplit(lines[i], ' ');
-	if (struct_exist(line[0], map) >= 0)
+	if (struct_exist(line[0], map) >= 0 || !struct_same_coord(line, map))
 		exit (free_ret(map, lines, line, -1));
 	map[j] = new_struct(lines);
 	map[j]->ant = 0;
@@ -146,6 +95,35 @@ t_room		**map_init(t_room **map, char **lines, char *entry)
 	return (map);
 }
 
+int			launch_resolvable(t_room **map, char *entry)
+{
+	t_algo		*algo;
+	int			size;
+	int			start;
+
+	size = 0;
+	start = 0;
+	while (map[size])
+		size++;
+	algo = (t_algo *)malloc(sizeof(algo) * 2);
+	algo->room_id = struct_start_end_exist(map, -1);
+	algo->weight = 0;
+	algo->steps = 0;
+	if (!resolvable(map, algo))
+	{
+		ft_strdel(&entry);
+		exit (free_ret(map, NULL, NULL, -1));
+	}
+	algo->room_id = start;
+	algo->weight = 0;
+	algo->steps = 0;
+	map[struct_start_end_exist(map, -1)]->crossed = 0;
+	ft_putstr(entry);
+	ft_strdel(&entry);
+	free(algo);
+	return (launch_ants(map));
+}
+
 t_room		**get_map(void)
 {
 	t_room		**map;
@@ -157,6 +135,8 @@ t_room		**get_map(void)
 	map = NULL;
 	entry = NULL;
 	if (!(entry = ft_read_standard(500)))
+		exit (free_ret(map, NULL, NULL, -1));
+	if (empty_lines(entry))
 		exit (free_ret(map, NULL, NULL, -1));
 	lines = ft_strsplit(entry, '\n');
 	map = map_init(map, lines, entry);

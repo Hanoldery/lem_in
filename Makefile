@@ -6,7 +6,7 @@
 #    By: Pierre <Pierre@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2016/11/07 14:30:42 by pgerbaud          #+#    #+#              #
-#    Updated: 2018/02/03 19:21:40 by pgerbaud         ###   ########.fr        #
+#    Updated: 2018/02/14 16:11:15 by pgerbaud         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,6 +17,7 @@ SRC = 	main \
 		struct_utils \
 		parser \
 		parser_utils \
+		pattern \
 		output
 OBJ=$(foreach lem, $(SRC), src/$(lem).o)
 

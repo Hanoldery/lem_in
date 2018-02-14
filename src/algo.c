@@ -6,49 +6,39 @@
 /*   By: pgerbaud <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/02/01 10:39:27 by pgerbaud          #+#    #+#             */
-/*   Updated: 2018/02/14 10:16:49 by pgerbaud         ###   ########.fr       */
+/*   Updated: 2018/02/14 18:23:16 by pgerbaud         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "lem_in.h"
 
-int			launch_resolvable(t_room **map, char *entry)
+void		backtrack_resolvable(t_room **map, t_algo *algo, int *i)
 {
-	t_algo		*algo;
-	int			size;
-	int			start;
-
-	size = 0;
-	start = 0;
-	while (map[size])
-		size++;
-	algo = (t_algo *)malloc(sizeof(algo) * 2);
-	algo->room_id = struct_start_end_exist(map, -1);
-	algo->weight = 0;
-	algo->steps = 0;
-	if (!resolvable(map, algo))
-	{
-		ft_strdel(&entry);
-		exit (free_ret(map, NULL, NULL, -1));
-	}
-	algo->room_id = start;
-	algo->weight = 0;
-	algo->steps = 0;
-	map[struct_start_end_exist(map, -1)]->crossed = 0;
-	ft_putstr(entry);
-	ft_strdel(&entry);
-	free(algo);
-	return (launch_ants(map));
-}
-
-int			resolvable(t_room **map, t_algo *algo)
-{
-	int		i;
 	int		tmp;
 	int		tmp_id;
 
 	tmp = 0;
 	tmp_id = 0;
+	map[algo->room_id]->crossed = 1;
+	if (map[map[algo->room_id]->links[*i]]->crossed)
+	{
+		*i = *i + 1;
+		return ;
+	}
+	tmp_id = algo->room_id;
+	algo->room_id = map[algo->room_id]->links[*i];
+	tmp = resolvable(map, algo);
+	algo->room_id = tmp_id;
+	if ((tmp < map[algo->room_id]->weight ||
+				map[algo->room_id]->weight == 0) && tmp != 0)
+		map[algo->room_id]->weight = tmp;
+	*i = *i + 1;
+}
+
+int			resolvable(t_room **map, t_algo *algo)
+{
+	int		i;
+
 	i = 0;
 	if (map[algo->room_id]->start_end == 1)
 		return (1);
@@ -56,21 +46,7 @@ int			resolvable(t_room **map, t_algo *algo)
 		return (map[algo->room_id]->weight + 1);
 	algo->steps++;
 	while (i < map[algo->room_id]->link_nbr)
-	{
-		map[algo->room_id]->crossed = 1;
-		if (map[map[algo->room_id]->links[i]]->crossed)
-		{
-			i++;
-			continue;
-		}
-		tmp_id = algo->room_id;
-		algo->room_id = map[algo->room_id]->links[i];
-		tmp = resolvable(map, algo);
-		algo->room_id = tmp_id;
-		if ((tmp < map[algo->room_id]->weight || map[algo->room_id]->weight == 0) && tmp != 0)
-			map[algo->room_id]->weight = tmp;
-		i++;
-	}
+		backtrack_resolvable(map, algo, &i);
 	if (map[algo->room_id]->weight == 0)
 	{
 		algo->steps--;
@@ -93,7 +69,8 @@ int			get_lowest_cost_path(t_room **map, int index)
 	{
 		if ((map[map[index]->links[i]]->weight <=
 					map[lowest]->weight)
-			&& (map[map[index]->links[i]]->weight != 0 || map[map[index]->links[i]]->start_end == 1))
+			&& (map[map[index]->links[i]]->weight != 0 ||
+				map[map[index]->links[i]]->start_end == 1))
 			lowest = map[index]->links[i];
 		i++;
 	}
@@ -106,7 +83,8 @@ void		move_ant(t_room **map, int i, int *moves, int *name_factor)
 
 	next = 0;
 	next = get_lowest_cost_path(map, i);
-	if (map[next]->ant == 1 && !map[next]->crossed && map[next]->start_end != 1)
+	if (map[next]->ant == 1 && !map[next]->crossed && map[next]->start_end != 1
+			&& struct_size(map) > 2)
 		move_ant(map, next, moves, name_factor);
 	if (map[i]->ant && map[i]->start_end != 1
 			&& (map[next]->ant == 0 || map[next]->start_end == 1)

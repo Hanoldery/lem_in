@@ -6,31 +6,27 @@
 /*   By: pgerbaud <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/02/01 10:40:00 by pgerbaud          #+#    #+#             */
-/*   Updated: 2018/02/13 16:26:02 by pgerbaud         ###   ########.fr       */
+/*   Updated: 2018/02/14 17:05:26 by pgerbaud         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "lem_in.h"
 
-void		display_struct(t_room **map)
+int			struct_same_coord(char **line, t_room **map)
 {
 	int		i;
-	int		j;
 
-	j = 0;
 	i = 0;
-	while (map[i])
+	if (ft_atoi(line[1]) > INT_MAX || ft_atoi(line[1]) < 0 ||
+		ft_atoi(line[2]) > INT_MAX || ft_atoi(line[2]) < 0)
+		return (0);
+	while (map && map[i])
 	{
-		printf("   ___________ MAP %d ___________\n", map[i]->id);
-		printf("NAME _%s_\nLINKS[]\t", map[i]->name);
-		while (j < map[i]->link_nbr && map[i]->link_nbr != 0)
-			printf("%d -- ", map[i]->links[j++]);
-		j = 0;
-		printf("\nSTART_END %d\t", map[i]->start_end);
-		printf("x%d y%d\t\t", map[i]->x, map[i]->y);
-		printf("ants%d\n\n", map[i]->ant);
+		if (map[i]->x == ft_atoi(line[1]) && map[i]->y == ft_atoi(line[2]))
+			return (0);
 		i++;
 	}
+	return (1);
 }
 
 int			struct_exist(char *name, t_room **map)
@@ -58,7 +54,7 @@ int			struct_start_end_exist(t_room **map, int start_end)
 			return (i);
 		i++;
 	}
-	return (0);
+	return (-1);
 }
 
 t_room		*new_struct(char **lines)
